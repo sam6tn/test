@@ -1,0 +1,111 @@
+<html>
+    <head>
+        <style>
+            h1 {
+                color:red;
+                font-size: 50pt;
+                text-align: center;
+            }
+
+            #resultsTable {
+                text-align: left;
+                border-collapse: collapse;
+            }
+            .cells {
+                border: 1px solid black;
+                padding: 15px;
+            }
+            .column {
+                float: left;
+                width: 50%;
+                overflow-y:auto;
+            }
+        </style>
+    </head>
+    <body>
+
+        <h1>Super Awesome Fortnite Page</h1>
+        <div class="row">
+            <div class="column">
+                <label for="x">X</label>
+                <input id="x" size="1">
+                <label for="y">Y</label>
+                <input id="y" size="1">
+                <button style="margin-bottom: 10px;" onclick="findClosestLocation()">Find</button>
+                <span id="closest"></span>
+        
+                <table id="resultsTable">
+                    <tr>
+                        <th class="cells">Name</th>
+                        <th class="cells">X</th>
+                        <th class="cells">Y</th>
+                    </tr>
+                </table>
+            </div>
+            <div class="column">
+                <img width="80%" src="https://fortnite-api.com/images/map_en.png">
+            </div>
+        </div>
+
+        <script>
+            var global = {};
+
+            async function getLocations(){
+                await fetch('https://fortnite-api.com/v1/map')
+                .then((response) => response.json())
+                .then((rawData) => {
+                    console.log(rawData);
+                    global.POIs = []
+                    for (let poi in rawData.data.pois) {
+                        if (rawData.data.pois[poi].name[2] == rawData.data.pois[poi].name[2].toLowerCase()){
+                            continue;
+                        }
+                        global.POIs.push(rawData.data.pois[poi]);
+                    }
+                })
+            }
+
+            async function populateTable() {
+                await getLocations();
+                console.log(global.POIs);
+                let POIs = global.POIs;
+                for (let poi in POIs) {
+                    var table = document.getElementById("resultsTable");
+                    var row = table.insertRow(-1);
+                    var cell1 = row.insertCell(0);
+                    var cell2 = row.insertCell(1);
+                    var cell3 = row.insertCell(2);
+                    cell1.innerHTML = POIs[poi].name;
+                    cell2.innerHTML = POIs[poi].location.x;
+                    cell3.innerHTML = POIs[poi].location.y;
+                    cell1.className = "cells";
+                    cell2.className = "cells";
+                    cell3.className = "cells";
+                }
+            }
+
+            function calcDistance(x1, y1, x2, y2) {
+                return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+            }
+
+            function findClosestLocation() {
+                var output = document.getElementById("closest");
+                var x = document.getElementById("x").value;
+                var y = document.getElementById("y").value;
+                let shortest = 99999999;
+                closest = "";
+                for (let poi in global.POIs) {
+                    let curr = calcDistance(x, y, global.POIs[poi].location.x, global.POIs[poi].location.y);
+                    //console.log(x, global.POIs[poi].location.x, y, global.POIs[poi].location.y)
+                    if (curr < shortest){
+                        shortest = curr;
+                        output.innerHTML = "Closest Location: " + global.POIs[poi].name;
+                    }
+                }
+            }
+
+            populateTable();
+            
+        </script>
+    </body>
+</html>
